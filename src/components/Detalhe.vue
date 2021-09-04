@@ -38,10 +38,21 @@
           </h4>
         </div>
         <div class="col-md-12">
-          <div v-if="bloco === false" @click="mostrarBloco">
-            <button>Fazer Pedido</button>
+          <button v-on:click="bloco = !bloco">Fazer Pedido</button>
+          <div v-if="bloco">
+            <hr />
+            <h3>Novo Pedido</h3>
+            <span>CPF Cliente:</span>
+            <input class="cpfCliente" v-model="procurarCPF"/>
+            <button class="buscar" v-on:click="getClienteByCPF">Buscar</button>
+            <div v-if="cpf.length > 0" >
+            <div class="dadosCliente">Nome Completo: {{nome + " " + sobrenome}}</div>
+            <div class="dadosCliente">CPF: {{cpf}}</div>
+            <div class="dadosCliente">Data de Nascimento: {{dataNascimento}}</div>
+            <hr />
+            <button>Salvar pedido</button>
+            </div>
           </div>
-          <div v-else @click="mostrarBloco"><button>Fazer Pedido</button><hr/></div>
         </div>
       </div>
     </div>
@@ -50,7 +61,7 @@
 <script>
 export default {
   name: "Detalhe",
-  data: function () {
+  data: function() {
     return {
       quantity: 1,
       finalQuantity: 1,
@@ -58,10 +69,18 @@ export default {
       total: 0,
       produto: {},
       bloco: false,
+      blocoCliente: false,
+
+      procurarCPF: "",
+      nome: "",
+      sobrenome: "",
+      dataNascimento: "",
+      cpf:"",
+
     };
   },
   methods: {
-    toCalculate: function () {
+    toCalculate: function() {
       this.finalQuantity = this.quantity;
 
       if (this.quantity === "") {
@@ -72,7 +91,7 @@ export default {
       this.total = total.toFixed(2);
     },
 
-    getNovoProduto: async function () {
+    getNovoProduto: async function() {
       const result = await fetch(
         "http://localhost:3000/produtos/" + this.$route.params.id
       )
@@ -85,23 +104,33 @@ export default {
         });
       if (!result.error) {
         this.produto = result;
+        console.log(result)
       }
     },
-    mostrarBloco: function () {
-      if (this.bloco === true) {
-        this.bloco = false;
-      } else {
-        this.bloco = true;
+
+    getClienteByCPF: async function(){
+      const result = await fetch("http://localhost:3000/clientes/busca/" + this.procurarCPF)
+      .then(res => res.json())
+      .catch(error => {
+        return{
+          error:true,
+          message:error,
+        };
+      });
+      if(!result.error){
+        this.nome = result.nome
+        this.sobrenome = result.sobrenome
+        this.dataNascimento = result.dataNascimento
+        this.cpf = result.CPF
       }
-      console.log(this.bloco);
-    },
+    }
   },
-  created: function () {
+  created: function() {
     this.getNovoProduto();
   },
 
   computed: {
-    produtosFiltrados: function () {
+    produtosFiltrados: function() {
       const produto = this.produto;
       return produto;
     },
@@ -140,5 +169,20 @@ export default {
   font-weight: bold;
   display: block;
   margin: 30px auto;
+  cursor:pointer
+}
+
+.detalhe .cpfCliente {
+  width: 290px;
+  margin-left: 20px;
+}
+
+.detalhe .buscar {
+  margin: 0;
+  width:100px;
+  display: inline;
+}
+.detalhe .dadosCliente{
+  margin: 10px 10px 10px 0 
 }
 </style>
