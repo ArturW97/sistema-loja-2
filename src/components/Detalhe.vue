@@ -38,20 +38,27 @@
           </h4>
         </div>
         <div class="col-md-12">
-          <button v-on:click="bloco = !bloco">Fazer Pedido</button>
-          <div v-if="bloco">
+          <button v-on:click="alternanciaBloco">Fazer Pedido</button>
+          <div v-show="bloco">
             <hr />
             <h3>Novo Pedido</h3>
             <span>CPF Cliente:</span>
-            <input class="cpfCliente" v-model="procurarCPF"/>
+            <input class="cpfCliente" v-model="procurarCPF" />
             <button class="buscar" v-on:click="getClienteByCPF">Buscar</button>
-            <div v-if="cpf.length > 0" >
-            <div class="dadosCliente">Nome Completo: {{nome + " " + sobrenome}}</div>
-            <div class="dadosCliente">CPF: {{cpf}}</div>
-            <div class="dadosCliente">Data de Nascimento: {{dataNascimento}}</div>
-            <hr />
-            <button>Salvar pedido</button>
+            <div v-if="clienteCPF.length > 0">
+              <div class="dadosCliente">
+                Nome Completo: {{ nome + " " + sobrenome }}
+              </div>
+              <div class="dadosCliente">CPF: {{ clienteCPF }}</div>
+              <div class="dadosCliente">
+                Data de Nascimento: {{ dataNascimento }}
+              </div>
+              <hr />
+              <button v-on:click="salvarPedido">Salvar pedido</button>
             </div>
+          </div>
+          <div v-show="mensagemSucesso" class="mensagemSucesso">
+            {{ message }}
           </div>
         </div>
       </div>
@@ -61,26 +68,30 @@
 <script>
 export default {
   name: "Detalhe",
-  data: function() {
+  data: function () {
     return {
       quantity: 1,
       finalQuantity: 1,
-      preco: 100,
       total: 0,
       produto: {},
-      bloco: false,
-      blocoCliente: false,
 
       procurarCPF: "",
       nome: "",
       sobrenome: "",
       dataNascimento: "",
-      cpf:"",
 
+      bloco: false,
+      mensagemSucesso: false,
+      message: "",
+
+      produtoId: "",
+      clienteCPF: "",
+      valorTotal: "",
+      valorUnitario: "",
     };
   },
   methods: {
-    toCalculate: function() {
+    toCalculate: function () {
       this.finalQuantity = this.quantity;
 
       if (this.quantity === "") {
@@ -91,7 +102,7 @@ export default {
       this.total = total.toFixed(2);
     },
 
-    getNovoProduto: async function() {
+    getProduto: async function () {
       const result = await fetch(
         "http://localhost:3000/produtos/" + this.$route.params.id
       )
@@ -104,33 +115,74 @@ export default {
         });
       if (!result.error) {
         this.produto = result;
-        console.log(result)
       }
     },
 
-    getClienteByCPF: async function(){
-      const result = await fetch("http://localhost:3000/clientes/busca/" + this.procurarCPF)
-      .then(res => res.json())
-      .catch(error => {
-        return{
-          error:true,
-          message:error,
-        };
-      });
-      if(!result.error){
-        this.nome = result.nome
-        this.sobrenome = result.sobrenome
-        this.dataNascimento = result.dataNascimento
-        this.cpf = result.CPF
+    alternanciaBloco: function (){
+      this.bloco = !this.bloco
+      this.mensagemSucesso = false
+    },
+
+    getClienteByCPF: async function () {
+      const result = await fetch(
+        "http://localhost:3000/clientes/busca/" + this.procurarCPF
+      )
+        .then((res) => res.json())
+        .catch((error) => {
+          return {
+            error: true,
+            message: error,
+          };
+        });
+      if (!result.error) {
+        this.nome = result.nome;
+        this.sobrenome = result.sobrenome;
+        this.dataNascimento = result.dataNascimento;
+        this.clienteCPF = result.CPF;
       }
-    }
+    },
+
+    salvarPedido: async function () {
+      this.bloco = false
+      const newPedido = {
+        produtoId: this.$route.params.id,
+        clienteCPF: this.clienteCPF,
+        ValorTotal: this.total,
+        valorUnitario: this.produto.price,
+        quantidade: this.quantity,
+      };
+
+      const result = await fetch("http://localhost:3000/pedidos", {
+        headers: {
+          Accept: "application/json",
+          "Content-type": "application/json",
+        },
+        method: "POST",
+        body: JSON.stringify(newPedido),
+      })
+        .then((res) => res.json())
+        .then((res) => res)
+        .catch((error) => {
+          return {
+            error: true,
+            message: error,
+          };
+        });
+
+      if (!result.error) {
+        (this.message = "Pedido cadastrado com sucesso."),
+          (this.mensagemSucesso = true),
+          (this.clienteCPF = ""),
+          (this.procurarCPF = "");
+      }
+    },
   },
-  created: function() {
-    this.getNovoProduto();
+  created: function () {
+    this.getProduto();
   },
 
   computed: {
-    produtosFiltrados: function() {
+    produtosFiltrados: function () {
       const produto = this.produto;
       return produto;
     },
@@ -169,7 +221,7 @@ export default {
   font-weight: bold;
   display: block;
   margin: 30px auto;
-  cursor:pointer
+  cursor: pointer;
 }
 
 .detalhe .cpfCliente {
@@ -179,10 +231,13 @@ export default {
 
 .detalhe .buscar {
   margin: 0;
-  width:100px;
+  width: 100px;
   display: inline;
 }
-.detalhe .dadosCliente{
-  margin: 10px 10px 10px 0 
+.detalhe .dadosCliente {
+  margin: 10px 10px 10px 0;
+}
+.detalhe .mensagemSucesso {
+  margin-top: 30px;
 }
 </style>

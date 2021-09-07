@@ -17,38 +17,13 @@
 <script>
 export default {
   name: "Card",
-  data: function () {
-    return {
-      produto: {},
-    };
-  },
   props: {
     title: String,
     price: String,
     img: String,
     _id: String,
   },
-  methods: {
-    getProduto: async function () {
-      const result = await fetch(
-        "http://localhost:3000/produtos/" + this.$route.params.id
-      )
-        .then((res) => res.json())
-        .catch((error) => {
-          return {
-            error: true,
-            message: error,
-          };
-        });
-      if (!result.error) {
-        this.produto = result;
-      }
-    },
-  },
-  created: function () {
-    this.getProduto();
-  },
-};
+}
 </script>
 <style>
 .card {
