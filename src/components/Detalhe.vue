@@ -45,7 +45,7 @@
             <span>CPF Cliente:</span>
             <input class="cpfCliente" v-model="procurarCPF" />
             <button class="buscar" v-on:click="getClienteByCPF">Buscar</button>
-            <div v-if="clienteCPF.length > 0">
+            <div v-if="clienteCPF.length == 11">
               <div class="dadosCliente">
                 Nome Completo: {{ nome + " " + sobrenome }}
               </div>
@@ -94,11 +94,10 @@ export default {
     toCalculate: function () {
       this.finalQuantity = this.quantity;
 
-      if (this.quantity === "") {
+      if (this.quantity === "" || this.quantity <= 0) {
         this.finalQuantity = 1;
       }
-
-      const total = parseFloat(this.produto.price) * this.finalQuantity;
+      const total = parseFloat(this.produto.price).toFixed(2) * this.finalQuantity;
       this.total = total.toFixed(2);
     },
 
@@ -145,7 +144,7 @@ export default {
     salvarPedido: async function () {
       this.bloco = false
       const newPedido = {
-        produtoId: this.$route.params.id,
+        produtoId: this.produto._id,
         clienteCPF: this.clienteCPF,
         ValorTotal: this.total,
         valorUnitario: this.produto.price,

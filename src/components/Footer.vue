@@ -3,7 +3,7 @@
     <div class="container">
       <div class="row">
         <div class="col-md-12">
-          <p>Todoso os direitos reservados <span>&copy;</span></p>
+          <p>Todos os direitos reservados <span>&copy;</span></p>
         </div>
       </div>
     </div>
